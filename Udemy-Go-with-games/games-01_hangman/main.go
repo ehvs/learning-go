@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 	"unicode"
 )
 
+var inputReader = bufio.NewReader(os.Stdin)
 var dictionary = []string{
 	"Zombie",
 	"Gopher",
@@ -19,19 +22,56 @@ func main() {
 	targetWord := getRandomWord()
 	//targetWord = "United States of America"
 	fmt.Println(targetWord)
-
 	guessedLetters := bagOfLetters(targetWord)
-	hangmanState := 1
-	printGameState(targetWord, guessedLetters, hangmanState)
+	hangmanState := 0
 
-	//guessedLetters['o'] = true
-	//printGameState(targetWord, guessedLetters)
+	for !isGameOver(targetWord, guessedLetters, hangmanState) {
+		printGameState(targetWord, guessedLetters, hangmanState)
+		input := readInput()
+		if len(input) != 1 {
+			fmt.Println("Invalid input. Please use letters only...")
+			continue // keep the game as it is
+		}
 
+		letter := rune(input[0]) // converting to rune
+		if validateGuess(targetWord, letter) {
+			guessedLetters[letter] = true
+		} else {
+			hangmanState++
+		}
+	}
+	fmt.Print("Game over...")
+	if isWordGuessed(targetWord, guessedLetters) {
+		fmt.Println("You win! You found out the word!")
+	} else if isHangmanComplete(hangmanState) {
+		fmt.Println("You lose!")
+	} else {
+		panic("invalid state. Game is over and there is no winner")
+	}
 }
+
+// Derive a word we have to guess
 func getRandomWord() string {
-	// Derive a word we have to guess
+
 	targetWord := dictionary[rand.Intn(len(dictionary))]
 	return targetWord
+}
+
+// Read Input
+func readInput() string {
+	fmt.Print("> ")
+	input, err := inputReader.ReadString('\n')
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(input)
+}
+
+// Validating guessed letter
+func validateGuess(targetWord string, letter rune) bool {
+	return strings.ContainsRune(targetWord, letter)
+
 }
 
 func bagOfLetters(targetWord string) map[rune]bool {
@@ -41,6 +81,32 @@ func bagOfLetters(targetWord string) map[rune]bool {
 	//guessedLetters[rune('s')] = true
 
 	return guessedLetters
+}
+
+// Check if word is guessed
+func isWordGuessed(targetWord string, guessedLetters map[rune]bool) bool {
+	for _, ch := range targetWord {
+		if !guessedLetters[unicode.ToLower(ch)] {
+			return false
+		}
+	}
+	return true
+}
+
+// Check if Hangman is complete
+func isHangmanComplete(hangmanState int) bool {
+	return hangmanState >= 9
+
+}
+
+// Game Over
+func isGameOver(
+	targetWord string,
+	guessedLetters map[rune]bool,
+	hangmanState int,
+) bool {
+	return isWordGuessed(targetWord, guessedLetters) ||
+		isHangmanComplete(hangmanState)
 }
 
 func printGameState(
@@ -80,24 +146,3 @@ func getHangmanDrawing(hangmanState int) string {
 
 	return (string(data))
 }
-
-// Print game state
-//  * word is: H _ _ _ m _ n
-//  * print hangman state
-// read user input
-//  * validate (e.g. only letters)
-// Determine if letter is correct or not
-//  * if correct, update the guessed letter
-//  * if incorrect, update the hangman state
-// If word is guessed -> game over, you win
-// If hagman is complete -> game over, you lose
-// prompt > k
-// guess incorrect!
-// H a _ _ m a n
-//
-// --------
-// |      |
-// |      o
-// |
-// |
-// -...
