@@ -1,0 +1,2 @@
+this is now feat12
+new line for git amend
