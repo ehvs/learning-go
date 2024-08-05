@@ -1,3 +1,0 @@
-this is feat14 now
-this is to amend
-this is to amend with new commit message
