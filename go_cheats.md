@@ -3,7 +3,6 @@
 1.Using modules
 
 - <https://www.digitalocean.com/community/tutorials/how-to-use-go-modules>
-- 
 
 ```
 go mod init chapter-1
